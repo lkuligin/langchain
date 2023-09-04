@@ -151,10 +151,14 @@ class ChatVertexAI(_VertexAICommon, BaseChatModel):
             params["examples"] = _parse_examples(examples)
         if not self.is_codey_model:
             chat = self.client.start_chat(
-                context=context, message_history=history.history, **params
+                context=context,
+                message_history=history.history,
+                stop_sequences=stop,
+                **params,
             )
         else:
             chat = self.client.start_chat(message_history=history.history, **params)
         response = chat.send_message(question.content)
-        text = self._enforce_stop_words(response.text, stop)
-        return ChatResult(generations=[ChatGeneration(message=AIMessage(content=text))])
+        return ChatResult(
+            generations=[ChatGeneration(message=AIMessage(content=response.text))]
+        )
