@@ -153,7 +153,7 @@ class ChatVertexAI(_VertexAICommon, BaseChatModel):
             chat = self.client.start_chat(
                 context=context,
                 message_history=history.history,
-                stop_sequences=stop,
+                stop_sequences=stop if stop else self.stop,
                 **params,
             )
         else:
