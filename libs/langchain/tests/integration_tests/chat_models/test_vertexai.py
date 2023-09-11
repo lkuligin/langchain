@@ -11,9 +11,11 @@ from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 
+from langchain.callbacks.manager import CallbackManager
 from langchain.chat_models import ChatVertexAI
 from langchain.chat_models.vertexai import _parse_chat_history, _parse_examples
 from langchain.schema.messages import AIMessage, HumanMessage, SystemMessage
+from tests.unit_tests.callbacks.fake_callback_handler import FakeCallbackHandler
 
 
 @pytest.mark.parametrize("model_name", [None, "codechat-bison", "chat-bison"])
@@ -173,3 +175,18 @@ def test_parse_examples_failes_wrong_sequence() -> None:
         str(exc_info.value)
         == "Expect examples to have an even amount of messages, got 1."
     )
+
+
+def test_streaming() -> None:
+    callback_handler = FakeCallbackHandler()
+    callback_manager = CallbackManager([callback_handler])
+    chat = ChatVertexAI(
+        streaming=True,
+        callback_manager=callback_manager,
+        verbose=True,
+    )
+    message = HumanMessage(content="Write me a story about streaming.")
+    response = chat([message])
+    assert callback_handler.llm_streams > 1
+    assert isinstance(response, AIMessage)
+    assert isinstance(response.content, str)

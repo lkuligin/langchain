@@ -9,8 +9,10 @@ Your end-user credentials would be used to make the calls (make sure you've run
 """
 import os
 
+from langchain.callbacks.manager import CallbackManager
 from langchain.llms import VertexAI, VertexAIModelGarden
 from langchain.schema import LLMResult
+from tests.unit_tests.callbacks.fake_callback_handler import FakeCallbackHandler
 
 
 def test_vertex_call() -> None:
@@ -19,6 +21,19 @@ def test_vertex_call() -> None:
     assert isinstance(output, str)
     assert llm._llm_type == "vertexai"
     assert llm.model_name == llm.client._model_id
+
+
+def test_vertex_streaming() -> None:
+    callback_handler = FakeCallbackHandler()
+    callback_manager = CallbackManager([callback_handler])
+    llm = VertexAI(
+        streaming=True,
+        callback_manager=callback_manager,
+        verbose=True,
+    )
+    output = llm("Write me a sentence with 100 words.")
+    assert callback_handler.llm_streams > 1
+    assert isinstance(output, str)
 
 
 def test_model_garden() -> None:
